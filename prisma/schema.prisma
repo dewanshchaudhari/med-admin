@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Address {
+  id        String   @id
+  userId    String
+  address   String
+  city      String
+  state     String
+  pincode   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model AlternativeMedicine {
+  id                                                         String   @id
+  medicineId                                                 String
+  alternateMedicineId                                        String
+  createdAt                                                  DateTime @default(now())
+  updatedAt                                                  DateTime
+  Medicine_AlternativeMedicine_alternateMedicineIdToMedicine Medicine @relation("AlternativeMedicine_alternateMedicineIdToMedicine", fields: [alternateMedicineId], references: [id])
+  Medicine_AlternativeMedicine_medicineIdToMedicine          Medicine @relation("AlternativeMedicine_medicineIdToMedicine", fields: [medicineId], references: [id])
+
+  @@index([alternateMedicineId], map: "AlternativeMedicine_alternateMedicineId_fkey")
+  @@index([medicineId])
+}
+
+model Brand {
+  id        String     @id
+  code      Int
+  brand     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  Medicine  Medicine[]
+
+  @@index([brand])
+  @@index([code])
+}
+
+model Category {
+  id        String     @id
+  category  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  Medicine  Medicine[]
+
+  @@index([category])
+}
+
+model Consultation {
+  id        String   @id
+  userId    String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Consultation_userId_fkey")
+}
+
+model Delivery {
+  id                 String   @id
+  pincode            String
+  fees               String
+  fees500            String
+  fees1000           String
+  packingFees        String
+  time               String
+  servicable         Boolean  @default(true)
+  prescriptionNumber String
+  cardOrderNumber    String
+  whatsappTapNumber  String
+  cod                Boolean  @default(false)
+  online             Boolean  @default(true)
+  topCity            Boolean  @default(false)
+  city               String
+  state              String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+
+  @@index([pincode])
+}
+
+model Manufacturer {
+  id           String     @id
+  manufacturer String     @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  Medicine     Medicine[]
+}
+
+model Marketer {
+  id        String     @id
+  marketer  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  Medicine  Medicine[]
+
+  @@index([marketer])
+}
+
+model Medicine {
+  id                                                                    String                @id
+  sno                                                                   Int
+  name                                                                  String
+  productId                                                             String
+  mrp                                                                   String
+  sp                                                                    String
+  discount                                                              String
+  savings                                                               String
+  cheapest                                                              Boolean
+  prescriptionRequired                                                  Boolean
+  topSelling                                                            Boolean
+  imageLink                                                             String?
+  packaging                                                             String                @db.Text
+  description                                                           String                @db.Text
+  storage                                                               String                @db.Text
+  sideEffects                                                           String                @db.Text
+  precautions                                                           String                @db.Text
+  content1                                                              String                @db.Text
+  content2                                                              String                @db.Text
+  content3                                                              String                @db.Text
+  content4                                                              String                @db.Text
+  content5                                                              String                @db.Text
+  content6                                                              String                @db.Text
+  brandId                                                               String?
+  saltId                                                                String?
+  categoryId                                                            String?
+  manufacturerId                                                        String?
+  subcategoryId                                                         String?
+  marketerId                                                            String?
+  createdAt                                                             DateTime              @default(now())
+  updatedAt                                                             DateTime
+  AlternativeMedicine_AlternativeMedicine_alternateMedicineIdToMedicine AlternativeMedicine[] @relation("AlternativeMedicine_alternateMedicineIdToMedicine")
+  AlternativeMedicine_AlternativeMedicine_medicineIdToMedicine          AlternativeMedicine[] @relation("AlternativeMedicine_medicineIdToMedicine")
+  Brand                                                                 Brand?                @relation(fields: [brandId], references: [id])
+  Category                                                              Category?             @relation(fields: [categoryId], references: [id])
+  Manufacturer                                                          Manufacturer?         @relation(fields: [manufacturerId], references: [id])
+  Marketer                                                              Marketer?             @relation(fields: [marketerId], references: [id])
+  Salt                                                                  Salt?                 @relation(fields: [saltId], references: [id])
+  Subcategory                                                           Subcategory?          @relation(fields: [subcategoryId], references: [id])
+  OrderMedicine                                                         OrderMedicine[]
+  SuggestionMedicine_SuggestionMedicine_medicineIdToMedicine            SuggestionMedicine[]  @relation("SuggestionMedicine_medicineIdToMedicine")
+  SuggestionMedicine_SuggestionMedicine_suggestionMedicineIdToMedicine  SuggestionMedicine[]  @relation("SuggestionMedicine_suggestionMedicineIdToMedicine")
+
+  @@index([brandId], map: "Medicine_brandId_fkey")
+  @@index([categoryId], map: "Medicine_categoryId_fkey")
+  @@index([manufacturerId], map: "Medicine_manufacturerId_fkey")
+  @@index([marketerId], map: "Medicine_marketerId_fkey")
+  @@index([name])
+  @@index([saltId], map: "Medicine_saltId_fkey")
+  @@index([subcategoryId], map: "Medicine_subcategoryId_fkey")
+}
+
+model Order {
+  id              String          @id
+  prescriptionUrl String?
+  userId          String
+  address         String
+  pincode         String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime
+  User            User            @relation(fields: [userId], references: [id])
+  OrderMedicine   OrderMedicine[]
+
+  @@index([userId], map: "Order_userId_fkey")
+}
+
+model OrderMedicine {
+  id         String   @id
+  orderId    String
+  medicineId String
+  qty        Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  Medicine   Medicine @relation(fields: [medicineId], references: [id])
+  Order      Order    @relation(fields: [orderId], references: [id])
+
+  @@index([medicineId], map: "OrderMedicine_medicineId_fkey")
+  @@index([orderId])
+}
+
+model OtpAuth {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique
+  otp       String
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+model Salt {
+  id        String     @id
+  code      Int
+  salt      String     @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  Medicine  Medicine[]
+
+  @@index([code])
+}
+
+model Shopkeeper {
+  id        String   @id
+  name      String
+  code      String
+  phone     String?
+  whatsapp  String?
+  website   String?
+  maps      String?  @db.Text
+  address   String
+  pincode   String
+  lat       String?
+  long      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([pincode])
+}
+
+model Subcategory {
+  id          String     @id
+  subcategory String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  Medicine    Medicine[]
+
+  @@index([subcategory])
+}
+
+model SuggestionMedicine {
+  id                                                         String   @id
+  medicineId                                                 String
+  suggestionMedicineId                                       String
+  createdAt                                                  DateTime @default(now())
+  updatedAt                                                  DateTime
+  Medicine_SuggestionMedicine_medicineIdToMedicine           Medicine @relation("SuggestionMedicine_medicineIdToMedicine", fields: [medicineId], references: [id])
+  Medicine_SuggestionMedicine_suggestionMedicineIdToMedicine Medicine @relation("SuggestionMedicine_suggestionMedicineIdToMedicine", fields: [suggestionMedicineId], references: [id])
+
+  @@index([medicineId])
+  @@index([suggestionMedicineId], map: "SuggestionMedicine_suggestionMedicineId_fkey")
+}
+
+model TruecallerAuth {
+  id          String   @id
+  requestId   String   @unique
+  status      String
+  accessToken String?
+  endpoint    String?
+  createdAt   DateTime @default(now())
+
+  @@index([requestId])
+}
+
+model User {
+  id                 String             @id
+  name               String?
+  phone              String             @unique
+  pincode            String?
+  city               String?
+  state              String?
+  image              String?
+  lat                String?
+  lon                String?
+  isDeleted          Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  userPrescriptionId String?
+  Address            Address[]
+  Consultation       Consultation[]
+  Order              Order[]
+  UserPrescription   UserPrescription[]
+}
+
+model UserPrescription {
+  id        String   @id
+  url       String
+  userId    String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "UserPrescription_userId_fkey")
+}
