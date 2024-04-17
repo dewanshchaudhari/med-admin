@@ -2,7 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { env } from "./env";
 
 export const config = {
-  matcher: ["/:anything"],
+  matcher: [
+    "/",
+    "/dashboard",
+    "/dashboard/",
+    "/dashboard/order",
+    "/dashboard/order/",
+    "/dashboard/user",
+    "/dashboard/user/",
+    "/dashboard/prescription",
+    "/dashboard/prescription/",
+  ],
 };
 
 export function middleware(req: NextRequest) {
