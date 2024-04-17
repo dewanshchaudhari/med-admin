@@ -10,7 +10,9 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "start:prod1": "NODE_ENV=production && next start -p 4020",
+    "start:prod2": "NODE_ENV=production && next start -p 4021"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
