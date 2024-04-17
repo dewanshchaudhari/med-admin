@@ -22,4 +22,11 @@ export const userRouter = createTRPCRouter({
       },
     });
   }),
+  allPrescriptions: publicProcedure.query(({ ctx }) => {
+    return ctx.db.userPrescription.findMany({
+      include: {
+        User: true,
+      },
+    });
+  }),
 });

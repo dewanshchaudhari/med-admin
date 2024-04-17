@@ -92,35 +92,22 @@ function formatDate(date: Date) {
 
   return `${month} ${day}, ${year}`;
 }
-export default function Dashboard() {
+export default function Prescription() {
   const [selectedOrderId, setSelectedOrderId] = React.useState<string>("");
-  const [cartValue, setCartValue] = React.useState(0);
   const [selectedOrder, setSelectedOrder] = React.useState<
-    RouterOutput["user"]["allOrders"][number] | null
+    RouterOutput["user"]["allPrescriptions"][number] | null
   >(null);
-  const { data, isLoading, isError } = api.user.allOrders.useQuery();
+  const { data, isLoading, isError } = api.user.allPrescriptions.useQuery();
   React.useEffect(() => {
     if (data?.length && data[0]?.id) {
       if (!selectedOrderId) {
         setSelectedOrderId(data[0].id);
         setSelectedOrder(data[0]);
-        setCartValue(
-          data[0].OrderMedicine.reduce((acc, i) => {
-            const a = Number(i.Medicine.sp) * i.qty;
-            return (acc += a);
-          }, 0),
-        );
       } else {
         const d = data.find((e) => e.id === selectedOrderId);
         if (!d) return;
         setSelectedOrderId(d.id);
         setSelectedOrder(d);
-        setCartValue(
-          d.OrderMedicine.reduce((acc, i) => {
-            const a = Number(i.Medicine.sp) * i.qty;
-            return (acc += a);
-          }, 0),
-        );
       }
     }
   }, [data, selectedOrderId]);
@@ -164,7 +151,7 @@ export default function Dashboard() {
               <TooltipTrigger asChild>
                 <Link
                   href="/dashboard/order"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                 >
                   <ShoppingCart className="h-5 w-5" />
                   <span className="sr-only">Orders</span>
@@ -192,7 +179,7 @@ export default function Dashboard() {
               <TooltipTrigger asChild>
                 <Link
                   href="/dashboard/prescription"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                 >
                   <FileBarChart2 className="h-5 w-5" />
                   <span className="sr-only">Prescription</span>
@@ -344,63 +331,28 @@ export default function Dashboard() {
                         className="h-7 gap-1 text-sm"
                         onClick={() => {
                           console.log(data);
-                          const numberOfMedicines = data.reduce((acc, i) => {
-                            if (acc < i.OrderMedicine.length) {
-                              acc = i.OrderMedicine.length;
-                            }
-                            return acc;
-                          }, 0);
-
-                          let headers = (numberOfMedicines: number) => [
-                            `Id,Date of prescription,prescription url,name,phone,address,pincode,${Array.from(
-                              Array(numberOfMedicines).keys(),
-                            )
-                              .map(
-                                (e, i) => `Medicine #${i + 1}, Qty #${i + 1}`,
-                              )
-                              .join(", ")}`,
+                          let headers = [
+                            `Id,Date of prescription,prescription url,phone,name,pincode`,
                           ];
-                          console.log(
-                            headers(numberOfMedicines),
-                            Array.from(Array(numberOfMedicines).keys())
-                              .map(
-                                (e, i) => `Medicine #${i + 1}, Qty #${i + 1}`,
-                              )
-                              .join(", "),
-                          );
+
                           // Convert users data to a csv
                           let usersCsv = data.reduce<string[]>((acc, user) => {
-                            const {
-                              id,
-                              prescriptionUrl,
-                              createdAt,
-                              User,
-                              address,
-                              OrderMedicine,
-                              pincode,
-                            } = user;
+                            const { id, url, createdAt, User } = user;
                             acc.push(
                               [
                                 id,
                                 new Date(createdAt).toDateString(),
-                                prescriptionUrl ?? "No url Uploaded",
-                                User.name ?? "",
+                                url ?? "No url Uploaded",
                                 "+" + User.phone ?? "",
-                                `"${address}"` ?? "",
-                                pincode ?? "",
-                                ...OrderMedicine.map((e) =>
-                                  [e.Medicine.name, e.qty].join(","),
-                                ),
+                                User.name ?? "",
+                                User.pincode ?? "",
                               ].join(","),
                             );
                             return acc;
                           }, []);
                           downloadFile({
-                            data: [
-                              ...headers(numberOfMedicines),
-                              ...usersCsv,
-                            ].join("\n"),
-                            fileName: "Orders.csv",
+                            data: [...headers, ...usersCsv].join("\n"),
+                            fileName: "Prescription.csv",
                             fileType: "text/csv",
                           });
                         }}
@@ -426,7 +378,6 @@ export default function Dashboard() {
                       <TableHead className="hidden md:table-cell">
                         Date
                       </TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -437,14 +388,10 @@ export default function Dashboard() {
                             key={d.id}
                             id={d.id}
                             name={d.User.name ?? ""}
-                            pincode={d.pincode}
+                            pincode={d.User.pincode ?? ""}
                             date={d.createdAt}
                             phone={d.User.phone ?? ""}
-                            hasPrescription={!!d.prescriptionUrl}
-                            amount={d.OrderMedicine.reduce((acc, i) => {
-                              const a = Number(i.Medicine.sp) * i.qty;
-                              return (acc += a);
-                            }, 0).toString()}
+                            prescriptionUrl={d.url}
                             active={selectedOrderId === d.id}
                             setId={setSelectedOrderId}
                           />
@@ -620,7 +567,7 @@ export default function Dashboard() {
                   <CardHeader className="flex flex-row items-start bg-muted/50">
                     <div className="grid gap-0.5">
                       <CardTitle className="group flex items-center gap-2 text-lg">
-                        Order +{selectedOrder.User.phone}
+                        Prescription +{selectedOrder.User.phone}
                         <Button
                           size="icon"
                           variant="outline"
@@ -662,112 +609,12 @@ export default function Dashboard() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-6 text-sm">
-                    <div className="grid gap-3">
-                      <div className="font-semibold">Order Details</div>
-                      <ul className="grid gap-3">
-                        {selectedOrder.OrderMedicine.map((om) => {
-                          return (
-                            <li className="flex items-center justify-between">
-                              <span className="text-muted-foreground">
-                                {om.Medicine.name} x <span>{om.qty}</span>
-                              </span>
-                              <span>₹ {Number(om.Medicine.sp) * om.qty}</span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      <Separator className="my-2" />
-                      <ul className="grid gap-3">
-                        <li className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Total</span>
-                          <span>₹ {cartValue}</span>
-                        </li>
-                        {/* <li className="flex items-center justify-between">
-                          <span className="text-muted-foreground">
-                            Shipping
-                          </span>
-                          <span>
-                            ₹{" "}
-                            {cartValue < 500
-                              ? 39
-                              : cartValue >= 500 && cartValue <= 999
-                                ? 19
-                                : 0}
-                          </span>
-                        </li> */}
-                        {/* <li className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Tax</span>
-                          <span>$25.00</span>
-                        </li>
-                        <li className="flex items-center justify-between font-semibold">
-                          <span className="text-muted-foreground">Total</span>
-                          <span>$329.00</span>
-                        </li> */}
-                      </ul>
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-3">
-                        <div className="font-semibold">
-                          Shipping Information
-                        </div>
-                        <address className="grid gap-0.5 not-italic text-muted-foreground">
-                          {selectedOrder.address
-                            .match(/.{1,35}/g)
-                            ?.map((e) => <span>{e}</span>)}
-                        </address>
-                      </div>
-                      <div className="grid auto-rows-max gap-3">
-                        <div className="font-semibold">Billing Information</div>
-                        <div className="text-muted-foreground">
-                          Same as shipping address
-                        </div>
-                      </div>
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="grid gap-3">
-                      <div className="font-semibold">Customer Information</div>
-                      <dl className="grid gap-3">
-                        <div className="flex items-center justify-between">
-                          <dt className="text-muted-foreground">Customer</dt>
-                          <dd>{selectedOrder.User.name}</dd>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <dt className="text-muted-foreground">Phone</dt>
-                          <dd>
-                            <a href={`tel:${selectedOrder.User.phone}`}>
-                              +{selectedOrder.User.phone}
-                            </a>
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="grid gap-3">
-                      <div className="font-semibold">Payment Information</div>
-                      <dl className="grid gap-3">
-                        <div className="flex items-center justify-between">
-                          <dt className="flex items-center gap-1 text-muted-foreground">
-                            <FileBarChart2 className="h-4 w-4" />
-                            Prescription
-                          </dt>
-                          {selectedOrder.prescriptionUrl ? (
-                            <Link
-                              href={selectedOrder.prescriptionUrl ?? ""}
-                              target="_blank"
-                            >
-                              <Badge className="text-xs" variant="secondary">
-                                link
-                              </Badge>
-                            </Link>
-                          ) : (
-                            <Badge className="text-xs" variant="destructive">
-                              Missing
-                            </Badge>
-                          )}
-                        </div>
-                      </dl>
-                    </div>
+                    <Image
+                      src={selectedOrder.url}
+                      width={600}
+                      height={4000}
+                      alt="hi"
+                    />
                   </CardContent>
                 </>
               )}

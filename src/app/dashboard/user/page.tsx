@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Copy,
   File,
+  FileBarChart2,
   Home,
   LineChart,
   MoreVertical,
@@ -169,6 +170,20 @@ export default function Dashboard() {
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right">Customers</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/dashboard/prescription"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                >
+                  <FileBarChart2 className="h-5 w-5" />
+                  <span className="sr-only">Prescription</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Prescription</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </nav>
@@ -561,7 +576,7 @@ export default function Dashboard() {
                   <CardHeader className="flex flex-row items-start bg-muted/50">
                     <div className="grid gap-0.5">
                       <CardTitle className="group flex items-center gap-2 text-lg">
-                        User {selectedUser.id}
+                        User +{selectedUser.phone}
                         <Button
                           size="icon"
                           variant="outline"
